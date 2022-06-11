@@ -79,11 +79,15 @@ class Camera:
     self.P = self.K.dot(Rt)
 
   def __init__(self, config):
-    self.setK(config["fx"], config["fy"], config["px"], config["py"])
-    self.setR(config["r_00"], config["r_01"], config["r_02"], 
-              config["r_10"], config["r_11"], config["r_12"],
-              config["r_20"], config["r_21"], config["r_22"])
-    self.setT(config["t_03"], config["t_13"], config["t_23"])
+    # intrinsic 相机内参
+    # extrinsic 相机外参
+    intrinsic = config[0]
+    extrinsic = config[1]
+    self.setK(intrinsic[0][0], intrinsic[1][1], intrinsic[0][2], intrinsic[1][2])
+    self.setR(extrinsic[0][0], extrinsic[0][1], extrinsic[0][2],
+              extrinsic[1][0], extrinsic[1][1], extrinsic[1][2],
+              extrinsic[2][0], extrinsic[2][1], extrinsic[2][2])
+    self.setT(extrinsic[0][3], extrinsic[1][3], extrinsic[2][3])
     self.updateP()
 
 class Camera1:
@@ -156,6 +160,7 @@ class ipm():
   def __init__(self, view_num, image_paths, camera_configs, drone_config):
     self.image_paths = image_paths
     self.camera_configs = camera_configs
+    self.drone_config = drone_configs
     # 加载相机参数和图像
     self.cams = []
     for i in range(view_num):

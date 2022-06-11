@@ -4,6 +4,8 @@ python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/view_data.py 
 ```
 
 ## data generate
+wit-3090服务器中使用pycharm远程调试需要修改datasets地址$data.dataset_dir=/media/wit/HDD_0/HXX/cross_view_transformers-master/datasets/nuScenes
+data.labels_dir=/media/wit/HDD_0/HXX/cross_view_transformers-master/datasets/cvt_labels_nuscenes$
 - visualiz
 ```cmd
 python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data.py \
