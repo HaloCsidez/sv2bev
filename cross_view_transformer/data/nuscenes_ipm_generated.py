@@ -40,7 +40,7 @@ def get_data(
     assert num_classes == NUM_CLASSES
 
     helper = NuScenesSingleton(dataset_dir, version)
-    transform = SaveDataTransform(labels_dir)
+    # transform = SaveDataTransform(labels_dir)
 
     # Format the split name
     split = f'mini_{split}' if version == 'v1.0-mini' else split
@@ -52,8 +52,7 @@ def get_data(
         if scene_name not in split_scenes:
             continue
 
-        data = NuScenesDataset(scene_name, scene_record, helper,
-                               transform=transform, **dataset_kwargs)
+        data = NuScenesDataset(scene_name, scene_record, helper, **dataset_kwargs)
         result.append(data)
 
     return result
@@ -116,17 +115,12 @@ class NuScenesDataset(torch.utils.data.Dataset):
         scene_name: str,
         scene_record: dict,
         helper: NuScenesSingleton,
-        transform=None,
         cameras=[[0, 1, 2, 3, 4, 5]],
         bev={'h': 200, 'w': 200, 'h_meters': 100, 'w_meters': 100, 'offset': 0.0},
     ):
         self.scene_name = scene_name
-        self.transform = transform
-
         self.nusc = helper.nusc
         self.nusc_map = helper.get_map(scene_record['log_token'])
-
-        self.view = get_view_matrix(**bev)
         self.bev_shape = (bev['h'], bev['w'])
         self.samples = self.parse_scene(scene_record, cameras)
 
@@ -158,6 +152,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
         images = []
         intrinsics = []
         extrinsics = []
+        translation = []
+        rotation = []
 
         for cam_idx in camera_rig:
             cam_channel = self.CAMERAS[cam_idx]
@@ -180,6 +176,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
             intrinsics.append(I)
             extrinsics.append(E.tolist())
             images.append(image_path)
+            translation.append(cam['translation'])
+            rotation.append(cam['rotation'])
 
         return {
             'scene': self.scene_name,
@@ -193,6 +191,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
             'intrinsics': intrinsics,
             'extrinsics': extrinsics,
             'images': images,
+            'translation': translation,
+            'rotation': rotation,
         }
 
     def __len__(self):
@@ -200,23 +200,15 @@ class NuScenesDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         sample = self.samples[idx]
-
-        # Raw annotations
-        anns_dynamic = self.get_annotations_by_category(sample, DYNAMIC)
-        anns_vehicle = self.get_annotations_by_category(sample, ['vehicle'])[0]
-
-        static = self.get_static_layers(sample, STATIC)                             # 200 200 2
-        dividers = self.get_line_layers(sample, DIVIDER)                            # 200 200 2
-        dynamic = self.get_dynamic_layers(sample, anns_dynamic)                     # 200 200 8
-        bev = np.concatenate((static, dividers, dynamic), -1)                       # 200 200 12
-
-        assert bev.shape[2] == NUM_CLASSES
-
-        # Additional labels for vehicles only.
-        aux, visibility = self.get_dynamic_objects(sample, anns_vehicle)
-
-        # Package the data.
         data = Sample(
+<<<<<<< HEAD
             **sample
         )
+=======
+            view=None,
+            bev=None,
+            **sample
+        )
+
+>>>>>>> f4bc738d5ab1dceb4b1dea49bd26771e0e5da20c
         return data
