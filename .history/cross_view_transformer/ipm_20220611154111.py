@@ -46,21 +46,25 @@ class Camera:
   P = np.zeros([3, 4])
 
   def setK(self, fx, fy, px, py):
-    self.K = np.zeros([3, 3])
     self.K[0, 0] = fx
     self.K[1, 1] = fy
     self.K[0, 2] = px
     self.K[1, 2] = py
     self.K[2, 2] = 1.0
-    
 
   def setR(self,
       r_00, r_01, r_02,
       r_10, r_11, r_12,
       r_20, r_21, r_22):
-    self.R = np.array([[r_00, r_01, r_02],
-                      [r_10, r_11, r_12],
-                      [r_20, r_21, r_22]])
+    self.R[0, 0] = r_00
+    self.R[0, 1] = r_01
+    self.R[0, 2] = r_02
+    self.R[1, 0] = r_10
+    self.R[1, 1] = r_11
+    self.R[1, 2] = r_12
+    self.R[2, 0] = r_20
+    self.R[2, 1] = r_21
+    self.R[2, 2] = r_22
 
   def setT(self, t_03, t_13, t_23):
     # self.t[0, 0] = t_03
@@ -169,7 +173,7 @@ class ipm():
     
 
   def processor(self):
-    print("ipm___开始进行IPM处理", os.path.basename(self.save_path))
+    print("_____开始进行IPM处理_____")
     # calculate output shape; adjust to match drone image, if specified
     # 通过内参设置输出图片的尺寸
     outputRes = (int(2 * self.drone_config["py"]), int(2 * self.drone_config["px"]))
@@ -201,7 +205,7 @@ class ipm():
       #   ], dtype='float32')
       rotate_matrix = R.from_matrix(cam.R)
       rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
-      print('ipm___rotate_degrees', rotate_degrees)
+      print(rotate_degrees)
       yaw = rotate_degrees[0]
       pitch = rotate_degrees[1]
       roll = rotate_degrees[2]
@@ -213,10 +217,10 @@ class ipm():
       masks.append(mask)
 
     # process images
-    images = []
     for imgPath in tqdm(self.image_paths):
       # load images
-      images.append(cv2.imread(os.path.join(self.dataset_dir, imgPath)))
+      images = []
+      images.append(cv2.imread(os.path.join(dataset_dir, imgPath)))
 
     # warp input images
     interpMode = cv2.INTER_NEAREST # cv2.INTER_LINEAR
@@ -236,4 +240,3 @@ class ipm():
 
     # display or export bird's-eye-view
     cv2.imwrite(self.save_path, birdsEyeView)
-    print('ipm___save file', self.save_path)

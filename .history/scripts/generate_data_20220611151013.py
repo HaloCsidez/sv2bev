@@ -10,7 +10,6 @@ from tqdm import tqdm
 from cross_view_transformer.data.transforms import LoadDataTransform
 from cross_view_transformer.common import setup_config, setup_data_module, setup_viz
 from cross_view_transformer.ipm import ipm
-import os
 
 
 def setup(cfg):
@@ -27,7 +26,7 @@ def setup(cfg):
     # cfg.loader.prefetch_factor = 2
     # cfg.loader.persistent_workers = False
 
-def ipm_processor(batch, cfg_data):
+def ipm_processor(batch, labels_dir):
     view_num = len(batch['images'])
     tmp = [batch['intrinsics'], batch['extrinsics']]
     camera_config = list(map(list, zip(*tmp))) # transpose ([[i1,i2],[e1,e2]] -> [[i1,e1],[i2,e2]])
@@ -35,13 +34,9 @@ def ipm_processor(batch, cfg_data):
         'fx': 1266.417203046554, 'fy': 1266.417203046554, 
         'px': 816.2670197447984, 'py': 491.50706579294757, 
         'yaw': 0.0, 'pitch': 90.0, 'roll': 90.0, 
-        'XCam': 0, 'YCam': 0, 'ZCam': 80
+        'XCam': 0, 'YCam': 0, 'ZCam': 8
         }
-    ipm(view_num, batch['images'], camera_config, drone_config, 
-        os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), 
-                     str(batch['bev']).replace('bev', 'ipm')),
-        cfg_data['dataset_dir']
-        )
+    ipm(view_num, batch['images'], camera_config, drone_config, str(labels_dir).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'))
 
 
 @hydra.main(config_path=Path.cwd() / 'config', config_name='config.yaml')
@@ -88,18 +83,18 @@ def main(cfg):
                 
                 for batch in batchs:
                     # 处理一组图片(6个视角为一组)
-                    ipm_processor(batch, cfg['data'])
+                    ipm_processor(batch, cfg['data']['labels_dir'])
                         
 
                 # Load data from disk to test if it was saved correctly
-                # if i == 0 and viz_fn is not None:
-                #     unbatched = [load_xform(s) for s in batchs]
-                #     rebatched = torch.utils.data.dataloader.default_collate(unbatched)
+                if i == 0 and viz_fn is not None:
+                    unbatched = [load_xform(s) for s in batch]
+                    rebatched = torch.utils.data.dataloader.default_collate(unbatched)
 
-                #     viz = np.vstack(viz_fn(rebatched))
+                    viz = np.vstack(viz_fn(rebatched))
 
-                #     cv2.imshow('debug', cv2.cvtColor(viz, cv2.COLOR_RGB2BGR))
-                #     cv2.waitKey(1)
+                    cv2.imshow('debug', cv2.cvtColor(viz, cv2.COLOR_RGB2BGR))
+                    cv2.waitKey(1)
 
             # Write all info for loading to json
             scene_json = labels_dir / f'{episode.scene_name}.json'

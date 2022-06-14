@@ -169,7 +169,7 @@ class ipm():
     
 
   def processor(self):
-    print("ipm___开始进行IPM处理", os.path.basename(self.save_path))
+    # print("_____开始进行IPM处理_____")
     # calculate output shape; adjust to match drone image, if specified
     # 通过内参设置输出图片的尺寸
     outputRes = (int(2 * self.drone_config["py"]), int(2 * self.drone_config["px"]))
@@ -201,7 +201,7 @@ class ipm():
       #   ], dtype='float32')
       rotate_matrix = R.from_matrix(cam.R)
       rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
-      print('ipm___rotate_degrees', rotate_degrees)
+      # print(rotate_degrees)
       yaw = rotate_degrees[0]
       pitch = rotate_degrees[1]
       roll = rotate_degrees[2]
@@ -236,4 +236,4 @@ class ipm():
 
     # display or export bird's-eye-view
     cv2.imwrite(self.save_path, birdsEyeView)
-    print('ipm___save file', self.save_path)
+    print('save file' ,self.save_path)

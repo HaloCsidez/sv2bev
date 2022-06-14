@@ -169,7 +169,7 @@ class ipm():
     
 
   def processor(self):
-    print("ipm___开始进行IPM处理", os.path.basename(self.save_path))
+    print("_____开始进行IPM处理_____", os.path.basename(self.image_paths))
     # calculate output shape; adjust to match drone image, if specified
     # 通过内参设置输出图片的尺寸
     outputRes = (int(2 * self.drone_config["py"]), int(2 * self.drone_config["px"]))

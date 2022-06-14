@@ -35,7 +35,7 @@ def ipm_processor(batch, cfg_data):
         'fx': 1266.417203046554, 'fy': 1266.417203046554, 
         'px': 816.2670197447984, 'py': 491.50706579294757, 
         'yaw': 0.0, 'pitch': 90.0, 'roll': 90.0, 
-        'XCam': 0, 'YCam': 0, 'ZCam': 80
+        'XCam': 0, 'YCam': 0, 'ZCam': 8
         }
     ipm(view_num, batch['images'], camera_config, drone_config, 
         os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), 

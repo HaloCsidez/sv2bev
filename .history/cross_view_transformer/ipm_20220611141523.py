@@ -46,21 +46,25 @@ class Camera:
   P = np.zeros([3, 4])
 
   def setK(self, fx, fy, px, py):
-    self.K = np.zeros([3, 3])
     self.K[0, 0] = fx
     self.K[1, 1] = fy
     self.K[0, 2] = px
     self.K[1, 2] = py
     self.K[2, 2] = 1.0
-    
 
   def setR(self,
       r_00, r_01, r_02,
       r_10, r_11, r_12,
       r_20, r_21, r_22):
-    self.R = np.array([[r_00, r_01, r_02],
-                      [r_10, r_11, r_12],
-                      [r_20, r_21, r_22]])
+    self.R[0, 0] = r_00
+    self.R[0, 1] = r_01
+    self.R[0, 2] = r_02
+    self.R[1, 0] = r_10
+    self.R[1, 1] = r_11
+    self.R[1, 2] = r_12
+    self.R[2, 0] = r_20
+    self.R[2, 1] = r_21
+    self.R[2, 2] = r_22
 
   def setT(self, t_03, t_13, t_23):
     # self.t[0, 0] = t_03
@@ -153,30 +157,25 @@ class Camera1:
 #     droneConfig = yaml.safe_load(stream)
 
 class ipm():
-  def __init__(self, view_num, image_paths, camera_configs, drone_config, save_path, dataset_dir):
+  def __init__(self, view_num, image_paths, camera_configs, drone_config):
     self.image_paths = image_paths
     self.camera_configs = camera_configs
     self.drone_config = drone_config
-    self.dataset_dir = dataset_dir
     # 加载相机参数和图像
     self.cams = []
     for i in range(view_num):
       self.cams.append(Camera(camera_configs[i]))
     self.drone = Camera1(drone_config)
-    self.save_path = save_path
     self.processor()
-
     
 
   def processor(self):
-    print("ipm___开始进行IPM处理", os.path.basename(self.save_path))
+    print("_____开始进行IPM处理_____")
     # calculate output shape; adjust to match drone image, if specified
     # 通过内参设置输出图片的尺寸
     outputRes = (int(2 * self.drone_config["py"]), int(2 * self.drone_config["px"]))
-    # 得到画面的真实尺寸
     dx = outputRes[1] / self.drone_config["fx"] * self.drone_config["ZCam"]
     dy = outputRes[0] / self.drone_config["fy"] * self.drone_config["ZCam"]
-    # 通过输出图片尺寸和真实尺寸得到每一个像素所代表的真实距离
     pxPerM = (outputRes[0] / dy, outputRes[1] / dx)
       
 
@@ -192,48 +191,53 @@ class ipm():
 
     # setup masks to later clip invalid parts from transformed images (inefficient, but constant runtime)
     masks = []
-    for cam in self.cams:
+    for config in self.camera_configs:
       mask = np.zeros((outputRes[0], outputRes[1], 3), dtype=bool)
-      # rotate_matrix = np.array([
-      #   [config['r_00'], config['r_01'], config['r_02']],
-      #   [config['r_10'], config['r_11'], config['r_12']],
-      #   [config['r_20'], config['r_21'], config['r_22']]
-      #   ], dtype='float32')
-      rotate_matrix = R.from_matrix(cam.R)
+      rotate_matrix = np.array([
+        [config['r_00'], config['r_01'], config['r_02']],
+        [config['r_10'], config['r_11'], config['r_12']],
+        [config['r_20'], config['r_21'], config['r_22']]
+        ], dtype='float32')
+      rotate_matrix = R.from_matrix(rotate_matrix)
       rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
-      print('ipm___rotate_degrees', rotate_degrees)
-      yaw = rotate_degrees[0]
-      pitch = rotate_degrees[1]
-      roll = rotate_degrees[2]
+      print(rotate_degrees)
+      config["yaw"] = rotate_degrees[0]
+      config["pitch"] = rotate_degrees[1]
+      config["roll"] = rotate_degrees[2]
       for i in range(outputRes[1]):
         for j in range(outputRes[0]):
           theta = np.rad2deg(np.arctan2(-j + outputRes[0] / 2 - self.drone_config["YCam"] * pxPerM[0], i - outputRes[1] / 2 + self.drone_config["XCam"] * pxPerM[1]))
-          if abs(theta - yaw) > 90 and abs(theta - yaw) < 270:
+          if abs(theta - config["yaw"]) > 90 and abs(theta - config["yaw"]) < 270:
             mask[j,i,:] = True
       masks.append(mask)
 
     # process images
-    images = []
-    for imgPath in tqdm(self.image_paths):
+    progBarWrapper = tqdm(self.image_paths)
+    for imageTuple in progBarWrapper:
+
+      filename = os.path.basename(imageTuple[0])
+      progBarWrapper.set_postfix_str(filename)
+
       # load images
-      images.append(cv2.imread(os.path.join(self.dataset_dir, imgPath)))
+      images = []
+      for imgPath in imageTuple:
+        images.append(cv2.imread(imgPath))
 
-    # warp input images
-    interpMode = cv2.INTER_NEAREST # cv2.INTER_LINEAR
-    warpedImages = []
-    for img, IPM in zip(images, IPMs):
-      warpedImages.append(cv2.warpPerspective(img, IPM, (outputRes[1], outputRes[0]), flags=interpMode))
+      # warp input images
+      interpMode = cv2.INTER_NEAREST # cv2.INTER_LINEAR
+      warpedImages = []
+      for img, IPM in zip(images, IPMs):
+        warpedImages.append(cv2.warpPerspective(img, IPM, (outputRes[1], outputRes[0]), flags=interpMode))
 
-    # remove invalid areas (behind the camera) from warped images
-    for warpedImg, mask in zip(warpedImages, masks):
-      warpedImg[mask] = 0
+      # remove invalid areas (behind the camera) from warped images
+      for warpedImg, mask in zip(warpedImages, masks):
+        warpedImg[mask] = 0
 
-    # stitch separate images to total bird's-eye-view
-    birdsEyeView = np.zeros(warpedImages[0].shape, dtype=np.uint8)
-    for warpedImg in warpedImages:
-      mask = np.any(warpedImg != (0,0,0), axis=-1)
-      birdsEyeView[mask] = warpedImg[mask]
+      # stitch separate images to total bird's-eye-view
+      birdsEyeView = np.zeros(warpedImages[0].shape, dtype=np.uint8)
+      for warpedImg in warpedImages:
+        mask = np.any(warpedImg != (0,0,0), axis=-1)
+        birdsEyeView[mask] = warpedImg[mask]
 
-    # display or export bird's-eye-view
-    cv2.imwrite(self.save_path, birdsEyeView)
-    print('ipm___save file', self.save_path)
+      # display or export bird's-eye-view
+      cv2.imwrite(os.path.join('/media/wit/9CACF0B70A8CAE3B/Code/cross_view_transformers/datasets/nuscenes_ipm', filename), birdsEyeView)
