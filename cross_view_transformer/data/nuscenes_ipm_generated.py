@@ -152,6 +152,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
         images = []
         intrinsics = []
         extrinsics = []
+        translation = []
+        rotation = []
 
         for cam_idx in camera_rig:
             cam_channel = self.CAMERAS[cam_idx]
@@ -174,6 +176,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
             intrinsics.append(I)
             extrinsics.append(E.tolist())
             images.append(image_path)
+            translation.append(cam['translation'])
+            rotation.append(cam['rotation'])
 
         return {
             'scene': self.scene_name,
@@ -187,6 +191,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
             'intrinsics': intrinsics,
             'extrinsics': extrinsics,
             'images': images,
+            'translation': translation,
+            'rotation': rotation,
         }
 
     def __len__(self):
@@ -195,6 +201,8 @@ class NuScenesDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         sample = self.samples[idx]
         data = Sample(
+            view=None,
+            bev=None,
             **sample
         )
 

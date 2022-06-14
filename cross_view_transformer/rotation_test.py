@@ -1,6 +1,9 @@
 from scipy.spatial.transform import Rotation as R
 
 # CAM_FRONT_LEFT
+test = R.from_quat([0.5067997344989889, -0.4977567019405021, -0.4987849934090844,0.496594225837321])
+print(test.as_matrix())
+
 r_front_left = R.from_quat([0.6757265034669446,
         -0.6736266522251881,
         0.21214015046209478,
@@ -8,6 +11,7 @@ r_front_left = R.from_quat([0.6757265034669446,
 matrix = r_front_left.as_matrix()
 print("CAM_FRONT_LEFT \n" , matrix)
 euler = r_front_left.as_euler('xyz',degrees=True)
+# angle = r_front_left.as_rotvec()
 print(euler)
 
 # CAM_FRONT

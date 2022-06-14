@@ -13,7 +13,7 @@ import os
 
 def ipm_processor(batch, cfg_data):
     view_num = len(batch['images'])
-    tmp = [batch['intrinsics'], batch['extrinsics']]
+    tmp = [batch['intrinsics'], batch['translation'], batch['rotation']]
     camera_config = list(map(list, zip(*tmp))) # transpose ([[i1,i2],[e1,e2]] -> [[i1,e1],[i2,e2]])
     drone_config = {
         'fx': 1266.417203046554, 'fy': 1266.417203046554, 
@@ -23,7 +23,7 @@ def ipm_processor(batch, cfg_data):
         }
     ipm(view_num, batch['images'], camera_config, drone_config, 
         os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), 
-                     str(batch['bev']).replace('bev', 'ipm')),
+                     'ipm' + batch['token'] + '.png'),
         cfg_data['dataset_dir']
         )
 
@@ -36,7 +36,10 @@ def setup(cfg):
     cfg.loader.persistent_workers = True
     cfg.loader.drop_last = False
     cfg.loader.shuffle = False
-
+    # Uncomment to debug errors hidden by multiprocessing
+    cfg.loader.num_workers = 0
+    cfg.loader.prefetch_factor = 2
+    cfg.loader.persistent_workers = False
 
 @hydra.main(config_path=Path.cwd() / 'config', config_name='config.yaml')
 def main(cfg):

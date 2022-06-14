@@ -27,8 +27,10 @@ class Sample(dict):
         self.token = token
         self.scene = scene
 
-        self.view = view
-        self.bev = bev
+        if view is not None:
+            self.view = view
+        if bev is not None:
+            self.bev = bev
 
         self.images = images
         self.intrinsics = intrinsics

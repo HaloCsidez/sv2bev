@@ -74,6 +74,20 @@ class Camera:
     Rt[0:3, 3] = self.t
     self.P = self.K.dot(Rt)
 
+  # def __init__(self, config):
+  #   # intrinsic 相机内参
+  #   # extrinsic 相机外参
+  #   intrinsic = config[0]
+  #   translation = config[1]
+  #   rotation_quat = config[2]
+  #   rotation_matrix = R.from_quat(rotation_quat).as_matrix()
+  #   self.setK(intrinsic[0][0], intrinsic[1][1], intrinsic[0][2], intrinsic[1][2])
+  #   self.setR(rotation_matrix[0][0], rotation_matrix[0][1], rotation_matrix[0][2],
+  #             rotation_matrix[1][0], rotation_matrix[1][1], rotation_matrix[1][2],
+  #             rotation_matrix[2][0], rotation_matrix[2][1], rotation_matrix[2][2])
+  #   self.setT(translation[0], translation[1], translation[2])
+  #   self.updateP()
+
   def __init__(self, config):
     # intrinsic 相机内参
     # extrinsic 相机外参
@@ -85,6 +99,7 @@ class Camera:
               extrinsic[2][0], extrinsic[2][1], extrinsic[2][2])
     self.setT(extrinsic[0][3], extrinsic[1][3], extrinsic[2][3])
     self.updateP()
+
 
 class Camera1:
 
@@ -124,33 +139,6 @@ class Camera1:
     self.setT(config["XCam"], config["YCam"], config["ZCam"])
     self.updateP()
 
-
-# # parse command line arguments
-# parser = argparse.ArgumentParser(description="Warps camera images to the plane z=0 in the world frame.")
-# parser.add_argument("camera_img_pair", metavar="CAM IMG", nargs='*', help="camera config file and image file")
-# parser.add_argument("-wm", type=float, help="output image width in [m]", default=30)
-# parser.add_argument("-hm", type=float, help="output image height in [m]", default=40)
-# parser.add_argument("-r", type=float, help="output image resolution in [px/m]", default=20)
-# parser.add_argument("--drone", type=str, help="camera config file of drone to map to")
-# parser.add_argument("--batch", help="process folders of images instead of single images", action="store_true")
-# parser.add_argument("--output", help="output directory to write transformed images to")
-# parser.add_argument("--cc", help="use with color-coded images to enable NN-interpolation", action="store_true")
-# parser.add_argument("-v", help="only print homography matrices", action="store_true")
-# args = parser.parse_args()
-
-
-# load camera configurations and image paths
-# cameraConfigs = []
-# imagePathArgs = []
-# for aIdx in range(int(len(args.camera_img_pair) / 2.0)):
-#   with open(os.path.abspath(args.camera_img_pair[2*aIdx])) as stream:
-#     cameraConfigs.append(yaml.safe_load(stream))
-#   imagePathArgs.append(args.camera_img_pair[2*aIdx+1])
-# toDrone = False
-# if args.drone:
-#   toDrone = True
-#   with open(os.path.abspath(args.drone)) as stream:
-#     droneConfig = yaml.safe_load(stream)
 
 class ipm():
   def __init__(self, view_num, image_paths, camera_configs, drone_config, save_path, dataset_dir):
