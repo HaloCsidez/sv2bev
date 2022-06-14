@@ -8,6 +8,7 @@ outputs/
 .ipynb_checkpoints
 .vscode
 .idea
+.history
 wandb
 outputs
 datasets
