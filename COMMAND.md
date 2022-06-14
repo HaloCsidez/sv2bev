@@ -18,7 +18,7 @@ python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data
 
 - Disable visualizations by omitting the "visualization" flag
 ```cmd
-python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data.py \
+python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_ipm_data.py \
     data=nuscenes \
     data.version=v1.0-trainval \
     data.dataset_dir=/media/wit/9CACF0B70A8CAE3B/Code/cross_view_transformers/datasets/nuscenes \
