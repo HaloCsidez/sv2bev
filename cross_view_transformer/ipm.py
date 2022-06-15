@@ -46,27 +46,23 @@ class Camera:
   P = np.zeros([3, 4])
 
   def setK(self, fx, fy, px, py):
-    self.K = np.zeros([3, 3])
     self.K[0, 0] = fx
     self.K[1, 1] = fy
     self.K[0, 2] = px
     self.K[1, 2] = py
     self.K[2, 2] = 1.0
-    
 
-  def setR(self,
-      r_00, r_01, r_02,
-      r_10, r_11, r_12,
-      r_20, r_21, r_22):
-    self.R = np.array([[r_00, r_01, r_02],
-                      [r_10, r_11, r_12],
-                      [r_20, r_21, r_22]])
+  def setR(self, y, p, r):
 
-  def setT(self, t_03, t_13, t_23):
-    # self.t[0, 0] = t_03
-    # self.t[1, 0] = t_13
-    # self.t[2, 0] = t_23
-    self.t = np.array([t_03, t_13, t_23])
+    Rz = np.array([[np.cos(-y), -np.sin(-y), 0.0], [np.sin(-y), np.cos(-y), 0.0], [0.0, 0.0, 1.0]])
+    Ry = np.array([[np.cos(-p), 0.0, np.sin(-p)], [0.0, 1.0, 0.0], [-np.sin(-p), 0.0, np.cos(-p)]])
+    Rx = np.array([[1.0, 0.0, 0.0], [0.0, np.cos(-r), -np.sin(-r)], [0.0, np.sin(-r), np.cos(-r)]])
+    Rs = np.array([[0.0, -1.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0]]) # switch axes (x = -y, y = -z, z = x)
+    self.R = Rs.dot(Rz.dot(Ry.dot(Rx)))
+
+  def setT(self, XCam, YCam, ZCam):
+    X = np.array([XCam, YCam, ZCam])
+    self.t = -self.R.dot(X)
 
   def updateP(self):
     Rt = np.zeros([3, 4])
@@ -74,35 +70,17 @@ class Camera:
     Rt[0:3, 3] = self.t
     self.P = self.K.dot(Rt)
 
-  # def __init__(self, config):
-  #   # intrinsic 相机内参
-  #   # extrinsic 相机外参
-  #   intrinsic = config[0]
-  #   translation = config[1]
-  #   rotation_quat = config[2]
-  #   rotation_matrix = R.from_quat(rotation_quat).as_matrix()
-  #   self.setK(intrinsic[0][0], intrinsic[1][1], intrinsic[0][2], intrinsic[1][2])
-  #   self.setR(rotation_matrix[0][0], rotation_matrix[0][1], rotation_matrix[0][2],
-  #             rotation_matrix[1][0], rotation_matrix[1][1], rotation_matrix[1][2],
-  #             rotation_matrix[2][0], rotation_matrix[2][1], rotation_matrix[2][2])
-  #   self.setT(translation[0], translation[1], translation[2])
-  #   self.updateP()
-
   def __init__(self, config):
-    # intrinsic 相机内参
-    # extrinsic 相机外参
-    intrinsic = config[0]
-    extrinsic = config[1]
-    self.setK(intrinsic[0][0], intrinsic[1][1], intrinsic[0][2], intrinsic[1][2])
-    self.setR(extrinsic[0][0], extrinsic[0][1], extrinsic[0][2],
-              extrinsic[1][0], extrinsic[1][1], extrinsic[1][2],
-              extrinsic[2][0], extrinsic[2][1], extrinsic[2][2])
-    self.setT(extrinsic[0][3], extrinsic[1][3], extrinsic[2][3])
+    intrinsics = config[0]
+    translation = config[1]
+    euler = config[2]
+    self.setK(intrinsics[0][0], intrinsics[1][1], intrinsics[0][2], intrinsics[1][2])
+    self.setR(np.deg2rad(euler["yaw"]), np.deg2rad(euler["pitch"]), np.deg2rad(euler["roll"]))
+    self.setT(translation[0], translation[1], translation[2])
     self.updateP()
-
-
-class Camera1:
-
+    
+class Drone_Camera:
+    
   K = np.zeros([3, 3])
   R = np.zeros([3, 3])
   t = np.zeros([3, 1])
@@ -150,7 +128,7 @@ class ipm():
     self.cams = []
     for i in range(view_num):
       self.cams.append(Camera(camera_configs[i]))
-    self.drone = Camera1(drone_config)
+    self.drone = Drone_Camera(drone_config)
     self.save_path = save_path
     self.processor()
 
@@ -180,25 +158,34 @@ class ipm():
 
     # setup masks to later clip invalid parts from transformed images (inefficient, but constant runtime)
     masks = []
-    for cam in self.cams:
+    for config in self.camera_configs:
       mask = np.zeros((outputRes[0], outputRes[1], 3), dtype=bool)
-      # rotate_matrix = np.array([
-      #   [config['r_00'], config['r_01'], config['r_02']],
-      #   [config['r_10'], config['r_11'], config['r_12']],
-      #   [config['r_20'], config['r_21'], config['r_22']]
-      #   ], dtype='float32')
-      rotate_matrix = R.from_matrix(cam.R)
-      rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
-      print('ipm___rotate_degrees', rotate_degrees)
-      yaw = rotate_degrees[0]
-      pitch = rotate_degrees[1]
-      roll = rotate_degrees[2]
       for i in range(outputRes[1]):
         for j in range(outputRes[0]):
           theta = np.rad2deg(np.arctan2(-j + outputRes[0] / 2 - self.drone_config["YCam"] * pxPerM[0], i - outputRes[1] / 2 + self.drone_config["XCam"] * pxPerM[1]))
-          if abs(theta - yaw) > 90 and abs(theta - yaw) < 270:
+          if abs(theta - config[2]["yaw"]) > 90 and abs(theta - config[2]["yaw"]) < 270:
             mask[j,i,:] = True
-      masks.append(mask)
+    masks.append(mask)
+    
+    # for cam in self.cams:
+    #   mask = np.zeros((outputRes[0], outputRes[1], 3), dtype=bool)
+    #   # rotate_matrix = np.array([
+    #   #   [config['r_00'], config['r_01'], config['r_02']],
+    #   #   [config['r_10'], config['r_11'], config['r_12']],
+    #   #   [config['r_20'], config['r_21'], config['r_22']]
+    #   #   ], dtype='float32')
+    #   rotate_matrix = R.from_matrix(cam.R)
+    #   rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
+    #   # print('ipm___rotate_degrees', rotate_degrees)
+    #   yaw = rotate_degrees[0]
+    #   # pitch = rotate_degrees[1]
+    #   # roll = rotate_degrees[2]
+    #   for i in range(outputRes[1]):
+    #     for j in range(outputRes[0]):
+    #       theta = np.rad2deg(np.arctan2(-j + outputRes[0] / 2 - self.drone_config["YCam"] * pxPerM[0], i - outputRes[1] / 2 + self.drone_config["XCam"] * pxPerM[1]))
+    #       if abs(theta - yaw) > 90 and abs(theta - yaw) < 270:
+    #         mask[j,i,:] = True
+    #   masks.append(mask)
 
     # process images
     images = []

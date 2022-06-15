@@ -31,10 +31,12 @@ class Sample(dict):
             self.view = view
         if bev is not None:
             self.bev = bev
-
+        if extrinsics is not None:
+            self.extrinsics = extrinsics
+            
         self.images = images
         self.intrinsics = intrinsics
-        self.extrinsics = extrinsics
+        
 
     def __getattr__(self, key):
         return super().__getitem__(key)

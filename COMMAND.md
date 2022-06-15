@@ -26,4 +26,4 @@ python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_ipm_
 ```
 
 - gen ipm
-python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data.py     data=nuscenes     data.version=v1.0-trainval     data.dataset_dir=/media/wit/HDD_0/HXX/cross_view_transformers-master/datasets/nuScenes     data.labels_dir=/media/wit/HDD_0/HXX/cross_view_transformers-master/datasets/cvt_labels_nuscenes
+python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data.py     data=nuscenes     data.version=v1.0-trainval     data.dataset_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/nuScenes     data.labels_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/cvt_labels_nuscenes

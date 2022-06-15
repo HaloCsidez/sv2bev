@@ -1,0 +1,92 @@
+cam_front:
+  fx: 1252.8131021185304
+  fy: 1252.8131021185304
+  px: 826.588114781398
+  py: 469.9846626224581
+
+  yaw:     0.0
+  pitch:   0.0
+  roll:    0.0
+
+  # vehicle coords of camera origin
+  XCam: 1.72200568478
+  YCam: 0.00475453292289
+  ZCam: 1.49491291905 
+
+cam_front_left:
+  fx: 1257.8625342125129
+  fy: 1257.8625342125129
+  px: 827.2410631095686
+  py: 450.915498205774
+
+  yaw:     55.0
+  pitch:   0.0
+  roll:    0.0
+
+  # vehicle coords of camera origin
+  XCam: 1.5752559464
+  YCam: 0.500519383135
+  ZCam: 1.50696032589
+
+cam_front_right:
+  fx: 1256.7485116440405
+  fy: 1256.7485116440403
+  px: 817.7887570959712
+  py: 451.9541780095127
+
+  yaw:    -55.0
+  pitch:   0.0
+  roll:    0.0
+
+  # vehicle coords of camera origin
+  XCam: 1.58082565783
+  YCam: -0.499078711449
+  ZCam: 1.51749368405
+
+cam_back:
+  fx: 796.8910634503094
+  fy: 796.8910634503094
+  px: 857.7774326863696
+  py: 476.8848988407415
+
+  yaw:     180.0
+  pitch:   0.0
+  roll:    0.0
+
+  # vehicle coords of camera origin
+  XCam: 0.05524611077
+  YCam: 0.0107882366898
+  ZCam: 1.56794286957
+
+cam_back_left:
+  # default
+  fx: 1254.9860565800168
+  fy: 1254.9860565800168
+  px: 829.5769333630991
+  py: 467.1680561863987
+
+  # fixed
+  yaw:     110.0
+  pitch:   0.0
+  roll:    0.0
+
+  # default
+  XCam: 1.04852047718
+  YCam: 0.483058131052
+  ZCam: 1.56210154484
+
+cam_back_right:
+  fx: 1249.9629280788233
+  fy: 1249.9629280788233
+  px: 825.3768045375984
+  py: 462.54816385708756
+
+  yaw:    -110.0
+  pitch:   0.0
+  roll:    0.0
+
+  # vehicle coords of camera origin
+  XCam: 1.05945173053
+  YCam: -0.46720294852
+  ZCam: 1.55050857555
+

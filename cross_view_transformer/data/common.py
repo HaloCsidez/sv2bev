@@ -33,7 +33,7 @@ def get_transformation_matrix(R, t, inv=False):
 
     return pose
 
-
+# 将旋转矩阵和平移矩阵转换为外参
 def get_pose(rotation, translation, inv=False, flat=False):
     if flat:
         yaw = Quaternion(rotation).yaw_pitch_roll[0]

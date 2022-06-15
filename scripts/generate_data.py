@@ -37,11 +37,13 @@ def ipm_processor(batch, cfg_data):
         'yaw': 0.0, 'pitch': 90.0, 'roll': 90.0, 
         'XCam': 0, 'YCam': 0, 'ZCam': 80
         }
+    os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), 
+                     str(batch['bev']).replace('bev', 'ipm'), '')
+    
     ipm(view_num, batch['images'], camera_config, drone_config, 
         os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), 
                      str(batch['bev']).replace('bev', 'ipm')),
-        cfg_data['dataset_dir']
-        )
+        cfg_data['dataset_dir'])
 
 
 @hydra.main(config_path=Path.cwd() / 'config', config_name='config.yaml')

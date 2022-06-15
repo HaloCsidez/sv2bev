@@ -1,10 +1,11 @@
+from tkinter.messagebox import NO
 import torch
 import numpy as np
 import cv2
 
 from pathlib import Path
 from functools import lru_cache
-
+from omegaconf import OmegaConf, DictConfig
 from pyquaternion import Quaternion
 from shapely.geometry import MultiPolygon
 
@@ -115,6 +116,7 @@ class NuScenesDataset(torch.utils.data.Dataset):
         scene_name: str,
         scene_record: dict,
         helper: NuScenesSingleton,
+        camera_config: DictConfig,
         cameras=[[0, 1, 2, 3, 4, 5]],
         bev={'h': 200, 'w': 200, 'h_meters': 100, 'w_meters': 100, 'offset': 0.0},
     ):
@@ -122,9 +124,9 @@ class NuScenesDataset(torch.utils.data.Dataset):
         self.nusc = helper.nusc
         self.nusc_map = helper.get_map(scene_record['log_token'])
         self.bev_shape = (bev['h'], bev['w'])
-        self.samples = self.parse_scene(scene_record, cameras)
+        self.samples = self.parse_scene(scene_record, cameras, camera_config)
 
-    def parse_scene(self, scene_record, camera_rigs):
+    def parse_scene(self, scene_record, camera_rigs, camera_config):
         data = []
         sample_token = scene_record['first_sample_token']
 
@@ -132,7 +134,7 @@ class NuScenesDataset(torch.utils.data.Dataset):
             sample_record = self.nusc.get('sample', sample_token)
 
             for camera_rig in camera_rigs:
-                data.append(self.parse_sample_record(sample_record, camera_rig))
+                data.append(self.parse_sample_record(sample_record, camera_rig, camera_config))
 
             sample_token = sample_record['next']
 
@@ -141,7 +143,7 @@ class NuScenesDataset(torch.utils.data.Dataset):
     def parse_pose(self, record, *args, **kwargs):
         return get_pose(record['rotation'], record['translation'], *args, **kwargs)
 
-    def parse_sample_record(self, sample_record, camera_rig):
+    def parse_sample_record(self, sample_record, camera_rig, camera_config):
         lidar_record = self.nusc.get('sample_data', sample_record['data']['LIDAR_TOP'])
         egolidar = self.nusc.get('ego_pose', lidar_record['ego_pose_token'])
 
@@ -154,11 +156,12 @@ class NuScenesDataset(torch.utils.data.Dataset):
         extrinsics = []
         translation = []
         rotation = []
+        euler = []
 
         for cam_idx in camera_rig:
             cam_channel = self.CAMERAS[cam_idx]
             cam_token = sample_record['data'][cam_channel]
-
+            
             cam_record = self.nusc.get('sample_data', cam_token)
             egocam = self.nusc.get('ego_pose', cam_record['ego_pose_token'])
             cam = self.nusc.get('calibrated_sensor', cam_record['calibrated_sensor_token'])
@@ -178,21 +181,23 @@ class NuScenesDataset(torch.utils.data.Dataset):
             images.append(image_path)
             translation.append(cam['translation'])
             rotation.append(cam['rotation'])
+            euler.append(camera_config[cam_channel.lower()])
 
         return {
             'scene': self.scene_name,
             'token': sample_record['token'],
 
-            'pose': world_from_egolidarflat.tolist(),
-            'pose_inverse': egolidarflat_from_world.tolist(),
+            # 'pose': world_from_egolidarflat.tolist(),
+            # 'pose_inverse': egolidarflat_from_world.tolist(),
 
             'cam_ids': list(camera_rig),
             'cam_channels': cam_channels,
             'intrinsics': intrinsics,
-            'extrinsics': extrinsics,
+            # 'extrinsics': extrinsics,
             'images': images,
             'translation': translation,
-            'rotation': rotation,
+            # 'rotation': rotation,
+            'euler': euler
         }
 
     def __len__(self):
@@ -201,14 +206,10 @@ class NuScenesDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         sample = self.samples[idx]
         data = Sample(
-<<<<<<< HEAD
-            **sample
-        )
-=======
             view=None,
             bev=None,
+            extrinsics=None,
             **sample
         )
 
->>>>>>> f4bc738d5ab1dceb4b1dea49bd26771e0e5da20c
         return data
