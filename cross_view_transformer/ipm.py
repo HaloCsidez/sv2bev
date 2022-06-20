@@ -39,47 +39,6 @@ from .rotation2angle import rotationMatrixToEulerAngles
 from scipy.spatial.transform import Rotation as R
 
 class Camera:
-
-  K = np.zeros([3, 3])
-  R = np.zeros([3, 3])
-  t = np.zeros([3, 1])
-  P = np.zeros([3, 4])
-
-  def setK(self, fx, fy, px, py):
-    self.K[0, 0] = fx
-    self.K[1, 1] = fy
-    self.K[0, 2] = px
-    self.K[1, 2] = py
-    self.K[2, 2] = 1.0
-
-  def setR(self, y, p, r):
-
-    Rz = np.array([[np.cos(-y), -np.sin(-y), 0.0], [np.sin(-y), np.cos(-y), 0.0], [0.0, 0.0, 1.0]])
-    Ry = np.array([[np.cos(-p), 0.0, np.sin(-p)], [0.0, 1.0, 0.0], [-np.sin(-p), 0.0, np.cos(-p)]])
-    Rx = np.array([[1.0, 0.0, 0.0], [0.0, np.cos(-r), -np.sin(-r)], [0.0, np.sin(-r), np.cos(-r)]])
-    Rs = np.array([[0.0, -1.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0]]) # switch axes (x = -y, y = -z, z = x)
-    self.R = Rs.dot(Rz.dot(Ry.dot(Rx)))
-
-  def setT(self, XCam, YCam, ZCam):
-    X = np.array([XCam, YCam, ZCam])
-    self.t = -self.R.dot(X)
-
-  def updateP(self):
-    Rt = np.zeros([3, 4])
-    Rt[0:3, 0:3] = self.R
-    Rt[0:3, 3] = self.t
-    self.P = self.K.dot(Rt)
-
-  def __init__(self, config):
-    intrinsics = config[0]
-    translation = config[1]
-    euler = config[2]
-    self.setK(intrinsics[0][0], intrinsics[1][1], intrinsics[0][2], intrinsics[1][2])
-    self.setR(np.deg2rad(euler["yaw"]), np.deg2rad(euler["pitch"]), np.deg2rad(euler["roll"]))
-    self.setT(translation[0], translation[1], translation[2])
-    self.updateP()
-    
-class Drone_Camera:
     
   K = np.zeros([3, 3])
   R = np.zeros([3, 3])
@@ -87,11 +46,9 @@ class Drone_Camera:
   P = np.zeros([3, 4])
 
   def setK(self, fx, fy, px, py):
-    self.K[0, 0] = fx
-    self.K[1, 1] = fy
-    self.K[0, 2] = px
-    self.K[1, 2] = py
-    self.K[2, 2] = 1.0
+    self.K = np.array([[fx, 0, px],
+                      [0, fy, py],
+                      [0, 0, 1]])
 
   def setR(self, y, p, r):
 
@@ -118,6 +75,7 @@ class Drone_Camera:
     self.updateP()
 
 
+
 class ipm():
   def __init__(self, view_num, image_paths, camera_configs, drone_config, save_path, dataset_dir):
     self.image_paths = image_paths
@@ -126,9 +84,9 @@ class ipm():
     self.dataset_dir = dataset_dir
     # 加载相机参数和图像
     self.cams = []
-    for i in range(view_num):
-      self.cams.append(Camera(camera_configs[i]))
-    self.drone = Drone_Camera(drone_config)
+    for config in camera_configs:
+      self.cams.append(Camera(config))
+    self.drone = Camera(drone_config)
     self.save_path = save_path
     self.processor()
 
@@ -154,7 +112,10 @@ class ipm():
     # find IPM as inverse of P*M
     IPMs = []
     for cam in self.cams:
-      IPMs.append(np.linalg.inv(cam.P.dot(M)))
+      ipm_matrix = cam.P.dot(M)
+      ipm_matrix_inv = np.linalg.inv(ipm_matrix)
+      IPMs.append(ipm_matrix_inv)
+      assert np.allclose(np.dot(ipm_matrix, ipm_matrix_inv), np.eye(3))
 
     # setup masks to later clip invalid parts from transformed images (inefficient, but constant runtime)
     masks = []
@@ -163,33 +124,12 @@ class ipm():
       for i in range(outputRes[1]):
         for j in range(outputRes[0]):
           theta = np.rad2deg(np.arctan2(-j + outputRes[0] / 2 - self.drone_config["YCam"] * pxPerM[0], i - outputRes[1] / 2 + self.drone_config["XCam"] * pxPerM[1]))
-          if abs(theta - config[2]["yaw"]) > 90 and abs(theta - config[2]["yaw"]) < 270:
+          if abs(theta - config["yaw"]) > 90 and abs(theta - config["yaw"]) < 270:
             mask[j,i,:] = True
     masks.append(mask)
     
-    # for cam in self.cams:
-    #   mask = np.zeros((outputRes[0], outputRes[1], 3), dtype=bool)
-    #   # rotate_matrix = np.array([
-    #   #   [config['r_00'], config['r_01'], config['r_02']],
-    #   #   [config['r_10'], config['r_11'], config['r_12']],
-    #   #   [config['r_20'], config['r_21'], config['r_22']]
-    #   #   ], dtype='float32')
-    #   rotate_matrix = R.from_matrix(cam.R)
-    #   rotate_degrees = rotate_matrix.as_euler('xyz', degrees=True)
-    #   # print('ipm___rotate_degrees', rotate_degrees)
-    #   yaw = rotate_degrees[0]
-    #   # pitch = rotate_degrees[1]
-    #   # roll = rotate_degrees[2]
-    #   for i in range(outputRes[1]):
-    #     for j in range(outputRes[0]):
-    #       theta = np.rad2deg(np.arctan2(-j + outputRes[0] / 2 - self.drone_config["YCam"] * pxPerM[0], i - outputRes[1] / 2 + self.drone_config["XCam"] * pxPerM[1]))
-    #       if abs(theta - yaw) > 90 and abs(theta - yaw) < 270:
-    #         mask[j,i,:] = True
-    #   masks.append(mask)
-
-    # process images
     images = []
-    for imgPath in tqdm(self.image_paths):
+    for imgPath in self.image_paths:
       # load images
       images.append(cv2.imread(os.path.join(self.dataset_dir, imgPath)))
 

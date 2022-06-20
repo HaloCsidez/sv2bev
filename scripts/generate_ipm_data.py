@@ -13,9 +13,9 @@ import os
 
 def ipm_processor(batch, cfg_data):
     view_num = len(batch['images'])
-    tmp = [batch['intrinsics'], batch['translation'], batch['euler']]
+    # tmp = [batch['intrinsics'], batch['translation'], batch['euler']]
     # tmp = [batch['intrinsics'], batch['extrinsics']]
-    camera_config = list(map(list, zip(*tmp))) # transpose ([[i1,i2],[e1,e2]] -> [[i1,e1],[i2,e2]])
+    # camera_config = list(map(list, zip(*tmp))) # transpose ([[i1,i2],[e1,e2]] -> [[i1,e1],[i2,e2]])
     drone_config = {
         'fx': 1266.417203046554, 'fy': 1266.417203046554, 
         'px': 816.2670197447984, 'py': 491.50706579294757, 
@@ -25,7 +25,7 @@ def ipm_processor(batch, cfg_data):
     savedir = os.path.join(str(cfg_data['labels_dir']).replace('cvt_labels_nuscenes', 'ipm_gt_nuscenes'), batch['scene'])
     if not os.path.exists(savedir): 
         os.mkdir(savedir)
-    ipm(view_num, batch['images'], camera_config, drone_config, 
+    ipm(view_num, batch['images'], batch['euler'], drone_config, 
         os.path.join(savedir, 'ipm_' + batch['token'] + '.png'),
         cfg_data['dataset_dir']
         )
@@ -52,7 +52,7 @@ def main(cfg):
     labels_dir = Path(cfg.data.labels_dir)
     labels_dir.mkdir(parents=False, exist_ok=True)
 
-    for split in ['gen_ipm_train_0']:
+    for split in ['train', 'val']:
         print(f'Generating split: {split}')
 
         for episode in tqdm(data.get_split(split, loader=False), position=0, leave=False):

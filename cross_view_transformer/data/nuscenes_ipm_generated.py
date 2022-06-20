@@ -181,7 +181,15 @@ class NuScenesDataset(torch.utils.data.Dataset):
             images.append(image_path)
             translation.append(cam['translation'])
             rotation.append(cam['rotation'])
-            euler.append(camera_config[cam_channel.lower()])
+            c = dict(camera_config[cam_channel.lower()])
+            c['fx'] = I[0][0]
+            c['fy'] = I[1][1]
+            c['px'] = I[0][2]
+            c['py'] = I[1][2]
+            c['XCam'] = cam['translation'][0]
+            c['YCam'] = cam['translation'][1]
+            c['ZCam'] = cam['translation'][2]
+            euler.append(c)
 
         return {
             'scene': self.scene_name,
