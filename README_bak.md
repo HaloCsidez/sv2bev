@@ -105,15 +105,6 @@ python3 scripts/view_data.py \
   +split=val
 ```
 
-## <div align="center">**IPM Data Prepare**</div>
-
-<div align="center"><img src="docs/assets/ipm_generated.png" width="90%"/></div>
-
-基于[nuscenes-data-collection](https://www.nuscenes.org/nuscenes#data-collection)中标注的各个相机可视范围，生成的IPM俯视图
-```bash
-python3 ipm_pro.py
-```
-
 # <div align="center">**Training**</div>
 
 <div align="center">

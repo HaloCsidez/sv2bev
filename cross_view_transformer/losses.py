@@ -21,6 +21,7 @@ class SigmoidFocalLoss(torch.nn.Module):
         self.reduction = reduction
 
     def forward(self, pred, label):
+        # 该OP先计算输入x中每个元素的sigmoid值，然后计算sigmoid值与类别目标值label之间的Focal Loss。
         return sigmoid_focal_loss(pred, label, self.alpha, self.gamma, self.reduction)
 
 
@@ -43,6 +44,7 @@ class BinarySegmentationLoss(SigmoidFocalLoss):
 
         label = batch['bev']
 
+        # 获取GT: 有12种class, 将label_indices中的class(这部分class属于同一个类型)筛选出来, 进行合并 
         if self.label_indices is not None:
             label = [label[:, idx].max(1, keepdim=True).values for idx in self.label_indices]
             label = torch.cat(label, 1)

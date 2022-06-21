@@ -1,5 +1,6 @@
 import torch.nn as nn
-
+from PIL import Image
+import numpy as np
 
 class CrossViewTransformer(nn.Module):
     def __init__(
@@ -37,4 +38,10 @@ class CrossViewTransformer(nn.Module):
         y = self.decoder(x)
         z = self.to_logits(y)
 
+        # Image.fromarray(np.array({k: z[:, start:stop] for k, (start, stop) in self.outputs.items()}['center'].cpu().detach().numpy()).squeeze(1)[0]).convert("RGB").save('/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/test.png')
+        # 
+        # return    list:{
+        #               'bev':[],       [4, 1, 200, 200]
+        #               'center':[]     [4, 1, 200, 200]
+        #           }
         return {k: z[:, start:stop] for k, (start, stop) in self.outputs.items()}

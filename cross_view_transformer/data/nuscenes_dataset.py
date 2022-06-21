@@ -430,6 +430,7 @@ class NuScenesDataset(torch.utils.data.Dataset):
         # Package the data.
         data = Sample(
             view=self.view.tolist(),
+            # bev 数据GT
             bev=bev,
             aux=aux,
             visibility=visibility,
