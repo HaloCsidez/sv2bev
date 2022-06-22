@@ -22,6 +22,7 @@ class SigmoidFocalLoss(torch.nn.Module):
 
     def forward(self, pred, label):
         # 该OP先计算输入x中每个元素的sigmoid值，然后计算sigmoid值与类别目标值label之间的Focal Loss。
+        # Target size (torch.Size([4, 1, 200, 200])) must be the same as input size (torch.Size([24, 1, 224, 480]))
         return sigmoid_focal_loss(pred, label, self.alpha, self.gamma, self.reduction)
 
 

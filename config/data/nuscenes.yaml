@@ -2,7 +2,7 @@ dataset: 'nuscenes_generated'           # do not modify :)
 num_classes: 12                         # do not modify :)
 
 # used to get_split
-version: 'v1.0-mini'                # 'v1.0-trainval','v1.0-mini' for debugging
+version: 'v1.0-trainval'                # 'v1.0-mini' for debugging
 dataset_dir: ???
 labels_dir: ???
 
@@ -29,34 +29,3 @@ image:
   h: 224
   w: 480
   top_crop: 46
-
-camera_config:
-  cam_front:
-    yaw:     0.0
-    pitch:   0.0
-    roll:    0.0
-
-  cam_front_left:
-    yaw:     55.0
-    pitch:   0.0
-    roll:    0.0
-
-  cam_front_right:
-    yaw:    -55.0
-    pitch:   0.0
-    roll:    0.0
-
-  cam_back:
-    yaw:     180.0
-    pitch:   0.0
-    roll:    0.0
-
-  cam_back_left:
-    yaw:     110.0
-    pitch:   0.0
-    roll:    0.0
-
-  cam_back_right:
-    yaw:    -110.0
-    pitch:   0.0
-    roll:    0.0

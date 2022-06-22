@@ -33,8 +33,19 @@ class FCN8s(nn.Module):
             md5='dbd9bbb3829a3184913bccc74373afbb',
         )
 
-    def __init__(self, n_class=21):
+    def __init__(self, outputs: dict = {'bev': [0, 1]}):
         super(FCN8s, self).__init__()
+        dim_total = 0
+        dim_max = 0
+
+        for _, (start, stop) in outputs.items():
+            assert start < stop
+
+            dim_total += stop - start
+            dim_max = max(dim_max, stop)
+
+        assert dim_max == dim_total
+        
         # 进行下采样, 即encoder部分
         # conv1
         self.conv1_1 = nn.Conv2d(3, 64, 3, padding=100)
@@ -87,18 +98,18 @@ class FCN8s(nn.Module):
         self.relu7 = nn.ReLU(inplace=True)
         self.drop7 = nn.Dropout2d()
 
-        self.score_fr = nn.Conv2d(4096, n_class, 1)
-        self.score_pool3 = nn.Conv2d(256, n_class, 1)
-        self.score_pool4 = nn.Conv2d(512, n_class, 1)
+        self.score_fr = nn.Conv2d(4096, dim_max, 1)
+        self.score_pool3 = nn.Conv2d(256, dim_max, 1)
+        self.score_pool4 = nn.Conv2d(512, dim_max, 1)
 
         # 进行反卷积, 即上采样
         # decoder部分
         self.upscore2 = nn.ConvTranspose2d(
-            n_class, n_class, 4, stride=2, bias=False)
+            dim_max, dim_max, 4, stride=2, bias=False)
         self.upscore8 = nn.ConvTranspose2d(
-            n_class, n_class, 16, stride=8, bias=False)
+            dim_max, dim_max, 16, stride=8, bias=False)
         self.upscore_pool4 = nn.ConvTranspose2d(
-            n_class, n_class, 4, stride=2, bias=False)
+            dim_max, dim_max, 4, stride=2, bias=False)
 
         self._initialize_weights()
 

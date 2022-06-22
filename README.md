@@ -98,11 +98,20 @@ When everything is setup correctly, check out the dataset with
 ```bash
 python3 scripts/view_data.py \
   data=nuscenes \
-  data.dataset_dir=/media/datasets/nuscenes \
-  data.labels_dir=/media/datasets/cvt_labels_nuscenes \
+  data.dataset_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/nuScenes \
+  data.labels_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/cvt_labels_nuscenes \
   data.version=v1.0-mini \
   visualization=nuscenes_viz \
   +split=val
+```
+
+```bash
+python3 -m debugpy --wait-for-client --listen 0.0.0.0:8787 scripts/generate_data.py     
+data=nuscenes     
+data.version=v1.0-trainval     
+data.dataset_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/nuScenes
+data.labels_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/cvt_labels_nuscenes
+visualization=nuscenes_viz
 ```
 
 ## <div align="center">**IPM Data Prepare**</div>
@@ -138,10 +147,7 @@ Our models were trained using 4 GPU jobs, but also can be trained on single GPU.
 To train a model,
 
 ```bash
-python3 scripts/train.py \
-  +experiment=cvt_nuscenes_vehicle
-  data.dataset_dir=/media/datasets/nuscenes \
-  data.labels_dir=/media/datasets/cvt_labels_nuscenes
+python3 scripts/train_fcn.py +experiment=cvt_nuscenes_vehicle data.dataset_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/nuScenes data.labels_dir=/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/datasets/cvt_labels_nuscenes
 ```
 
 For more information, see

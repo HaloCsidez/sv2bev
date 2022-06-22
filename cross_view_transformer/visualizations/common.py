@@ -31,6 +31,7 @@ COLORS = {
 }
 
 
+# 给onehot编码的图片上色
 def colorize(x, colormap=None):
     """
     x: (h w) np.uint8 0-255
@@ -162,7 +163,9 @@ class BaseViz:
                 right = self.visualize_pred(bev[b], pred['bev'][b].sigmoid())
             else:
                 right = self.visualize_bev(bev[b])
-
+            
+            # 对包含多个class的bev类进行可视化
+            # cv2.imwrite('/media/wit/HDD_0/zhouhb/cvpr2022/sv2bev/scripts/bev.png',self.visualize_bev(bev[b]))
             right = [right] + self.visualize_custom(batch, pred, b)
             right = [x for x in right if x is not None]
             right = np.hstack(right)

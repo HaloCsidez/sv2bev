@@ -13,6 +13,9 @@ def setup(cfg):
     print('Shuffle samples by adding +shuffle=false')
 
     cfg.loader.batch_size = 1
+    cfg.loader.num_workers = 0
+    cfg.loader.prefetch_factor = 2
+    cfg.loader.persistent_workers = False
 
     if 'split' not in cfg:
         cfg.split = 'val'

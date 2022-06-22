@@ -27,16 +27,12 @@ class Sample(dict):
         self.token = token
         self.scene = scene
 
-        if view is not None:
-            self.view = view
-        if bev is not None:
-            self.bev = bev
-        if extrinsics is not None:
-            self.extrinsics = extrinsics
-            
+        self.view = view
+        self.bev = bev
+
         self.images = images
         self.intrinsics = intrinsics
-        
+        self.extrinsics = extrinsics
 
     def __getattr__(self, key):
         return super().__getitem__(key)
@@ -136,10 +132,10 @@ class LoadDataTransform(torchvision.transforms.ToTensor):
             image_new = image_new.crop((0, top_crop, image_new.width, image_new.height))
 
             I = np.float32(I_original)
-            I[0, 0] *= w / image.width
-            I[0, 2] *= w / image.width
-            I[1, 1] *= h / image.height
-            I[1, 2] *= h / image.height
+            I[0, 0] *= w_resize / image.width
+            I[0, 2] *= w_resize / image.width
+            I[1, 1] *= h_resize / image.height
+            I[1, 2] *= h_resize / image.height
             I[1, 2] -= top_crop
 
             images.append(self.img_transform(image_new))
@@ -147,7 +143,6 @@ class LoadDataTransform(torchvision.transforms.ToTensor):
 
         return {
             'cam_idx': torch.LongTensor(sample.cam_ids),
-            # 将tensor list 转换为 一个tensor
             'image': torch.stack(images, 0),
             'intrinsics': torch.stack(intrinsics, 0),
             'extrinsics': torch.tensor(np.float32(sample.extrinsics)),

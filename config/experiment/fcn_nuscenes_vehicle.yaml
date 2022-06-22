@@ -1,0 +1,9 @@
+# @package _global_
+defaults:
+  - override /model: fcn
+  - override /data: nuscenes_vehicle
+
+  - override /loss: center_loss
+  - override /metrics: visibility_metrics
+
+

@@ -395,6 +395,8 @@ for scene_name, scene_record in helper.get_scenes():
         filename = 'ipm_' + str(sample_token) + '.png'
         # display or export bird's-eye-view
         birdsEyeView = cv2.resize(birdsEyeView, (bev['w'], bev['h']))
+        # 将图片逆时针旋转90, 使得车头向前
+        birdsEyeView = cv2.rotate(birdsEyeView, cv2.ROTATE_90_COUNTERCLOCKWISE)
         cv2.imwrite(os.path.join(scene_path, filename), birdsEyeView)
         sample_index = sample_index + 1
         sample_token = sample_record['next']
